@@ -34,7 +34,6 @@ class TeamData:
         self.defense_id = defense_id
         self.offense_id = offense_id
         
-
 class Score:
     def __init__(self, black, silver):
         self.defense_id = defense_id
@@ -70,20 +69,22 @@ def reset():
                   "black": 0}
     READ_RFID = True
 
-def main():
+def get_button_status():
+    return button_status
+def get_score_info():
+    return score_info
+
+def start(q):
     global READ_RFID
 
+    reset()
 ##    pygame.mixer.init()
         
     try:
-        print("START DATA PROCESSING)
+        print("__ read data from sensors __")
         #set up GPIO using BOARD numbering
         GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)
-
-        # Start the RFID reading process
-        rfid_reader = Process(target=rfid_reader_proc, args=())
-        rfid_reader.start()
 
         # Button Switch Pins
         GPIO.setup(BUTTON_HOME_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
@@ -98,12 +99,14 @@ def main():
         GPIO.setup(GOAL_VISITORS_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP);
         GPIO.add_event_detect(GOAL_VISITORS_GPIO, GPIO.FALLING, callback=goal, bouncetime=1500)
 
-##        while True:
-##            try:
-##                time.sleep(30)
-##                print("/events/kickthedog")
-##            except Exception:
-##                sys.stderr.write("WARNIGN: Unable to contact server to kick the dog\n")
+        while True:
+            try:
+                time.sleep(1)
+                # Write output
+                print("...")
+                q.put([get_button_status(), get_score_info()])
+            except Exception:
+                sys.stderr.write("WARNIGN: Unable to contact server to kick the dog\n")
 
     except KeyboardInterrupt:
         pass
@@ -116,27 +119,15 @@ def main():
         print("Cleanup")
         GPIO.cleanup()
         READ_RFID = False
-        rfid_reader.join()
+##        rfid_reader.join()
 
 
 def goal(channel):
     global score_info
     side = "silver" if channel == GOAL_HOME_GPIO else "black"
     score_info[side] += 1
-    print(side + " goal!!")
-    print("score_info: " + score_info["silver"] + " : " + score_info["black"])
+##    print score_info
               
-##    play_sound(channel)
-
-##def play_sound(channel):
-##    if channel == GOAL_HOME_GPIO:
-##        pygame.mixer.music.load("./sounds/fanfare.wav")
-##    else:
-##        pygame.mixer.music.load("./sounds/fanfare2.wav")
-##    pygame.mixer.music.play()
-##    while pygame.mixer.music.get_busy() == True:
-##        continue
-
 def button(channel):
     side = "silver" if channel == BUTTON_HOME_GPIO else "black"
     if (GPIO.input(channel) and button_info[side].status is RELEASED):
@@ -161,7 +152,7 @@ def button_press(side):
         button_info[side].timer.cancel()
         button_info[side].timer = None
         button_info[side].press_time = NAN
-        button_status[side] = 
+        button_status[side] = "double_click"
         print(side + ": double click recognized")
     else:
         # this is an error state
@@ -169,7 +160,7 @@ def button_press(side):
         print(side + " unknown button state!")
 
 def button_release(side):
-    print side + "button release"
+    print side + ": button release"
     button_info[side].status = RELEASED
     if (not math.isnan(button_info[side].press_time)):
         # fire timer for single button press
@@ -178,36 +169,34 @@ def button_release(side):
 
 def penalty(side):
     button_info[side].press_time = NAN
+    button_status[side] = ": single_click"
     print(side + " single click recognized!")
 
-def rfid_reader_proc():
-    global READ_RFID
-    global players
-    print("Card reader active!")
+##def rfid_reader_proc():
+##    global READ_RFID
+##    global players
+##    print("Card reader active!")
+##
+##    try:
+##        # Create an object of the class MFRC522
+##        MIFAREReader = MFRC522.MFRC522()
+##
+##        while READ_RFID:
+##            # Scan for cards    
+##            (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+##
+##            # If a card is found
+##            if status == MIFAREReader.MI_OK:
+##                print("Card detected")
+##
+##            # Get the UID of the card
+##            (status,uid) = MIFAREReader.MFRC522_Anticoll()
+##
+##            # If we have the UID, continue
+##            if status == MIFAREReader.MI_OK:
+##                # If uid is unknown, send new user:
+##                players.add("white_back", uid)
+##                
+##    except KeyboardInterrupt:
+##        print("Card reader finished!")
 
-    try:
-        # Create an object of the class MFRC522
-        MIFAREReader = MFRC522.MFRC522()
-
-        while READ_RFID:
-            # Scan for cards    
-            (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
-
-            # If a card is found
-            if status == MIFAREReader.MI_OK:
-                print("Card detected")
-
-            # Get the UID of the card
-            (status,uid) = MIFAREReader.MFRC522_Anticoll()
-
-            # If we have the UID, continue
-            if status == MIFAREReader.MI_OK:
-                # If uid is unknown, send new user:
-                players.add("white_back", uid)
-                
-    except KeyboardInterrupt:
-        print("Card reader finished!")
-
-    
-if __name__ == "__main__":
-    main()
