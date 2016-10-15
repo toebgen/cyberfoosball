@@ -1,11 +1,15 @@
-from flask import render_template, flash, redirect
+from flask import render_template, flash, redirect, request
 from app import app
 from .models import User
+import json
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        print('POST requested')
+        game_status = request.json
+        print(json.dumps(game_status))
     player = {'name': 'Miguel'}  # fake user
     games = [
         {
