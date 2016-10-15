@@ -1,0 +1,6 @@
+{% extends "base.html" %} {% block content %}
+<h1>Hi, {{ player.name }}!</h1> {% for game in games %}
+<div>
+    <p>{{ game.player.name }} played on: <b>{{ game.timestamp }}</b></p>
+</div>
+{% endfor %} {% endblock %}

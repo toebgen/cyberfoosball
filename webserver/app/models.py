@@ -16,18 +16,6 @@ class User(db.Model):
     games = db.relationship('Game', secondary=games,
                             backref=db.backref('games', lazy='dynamic'))
 
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-
     def get_id(self):
         try:
             return unicode(self.id)
