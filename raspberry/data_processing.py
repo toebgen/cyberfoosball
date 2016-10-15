@@ -103,7 +103,7 @@ def start(q):
             try:
                 time.sleep(1)
                 # Write output
-                print("...")
+##                print("...")
                 q.put([get_button_status(), get_score_info()])
             except Exception:
                 sys.stderr.write("WARNIGN: Unable to contact server to kick the dog\n")

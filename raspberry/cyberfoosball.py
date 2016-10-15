@@ -9,17 +9,28 @@ from multiprocessing import Process, Queue
 # 2) 
 # 1) initialize -> read team data 
 
-def play_sound(sound_mode):
-    if sound_mode == "idle_mode_finished":
+def play_sound(what_to_play):
+    if what_to_play == "idle_mode_finished":
         pygame.mixer.music.load("./sounds/fanfare3.wav")
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy() == True:
-        continue
+    if what_to_play == "game_mode_finished":
+        pygame.mixer.music.load("./sounds/fanfare3.wav")
+    if what_to_play == "register_mode_finished":
+        pygame.mixer.music.load("./sounds/Vader/begin.wav")
+    if what_to_play == "goal":
+        pygame.mixer.music.load("./sounds/fanfare.wav")
+    try:
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy() == True:
+            continue
+    except KeyboardInterrupt:
+        pass
+    except:
+        pass
 
-def idle_mode_proc(q):
+def idle_mode_proc(dp_queue):
     try:
         while True:
-            button_status = q.get()[0]
+            button_status = dp_queue.get()[0]
             if button_status["silver"] != "undefined":
                 return;
             if button_status["black"] != "undefined":
@@ -28,49 +39,62 @@ def idle_mode_proc(q):
     except KeyboardInterrupt:
         pass
 
-def game_mode_proc(q):
+def game_mode_proc(dp_queue, game_status_queue):
     try:
         while True:
-            score_status = q.get()[1]
+            button_status = dp_queue.get()[0]
+            score_status = dp_queue.get()[1]
             print score_status
-##            if button_status["silver"] != "undefined":
+##            if score_status["silver"] != game_status_queue.get()[1]["silver"]:
+##                play_sound("goal")
 ##                return;
-##            if button_status["black"] != "undefined":
+##            if score_status["black"] != game_status_queue.get()[1]["black"]:
+##                play_sound("goal")
 ##                return;
-            time.sleep(0.1)
+            time.sleep(1)
     except KeyboardInterrupt:
-        pass
+        return
+    except:
+        return
 
 def main():
 
     pygame.mixer.init()
-    q = Queue()
+    dp_queue = Queue()
+    game_status_queue = Queue()
     
     try:
-        # add a loop to be able to return to idle mode
-        
-        print "Start data processing"
-        data_reader = Process(target=data_processing.start, args=(q,))
-        data_reader.start()
+        while True:        
+            # add a loop to be able to return to idle mode
+            
+            print "Start data processing"
+            data_reader = Process(target=data_processing.start, args=(dp_queue,))
+            data_reader.start()
 
-        print "Idle Mode"
-        idle_mode = Process(target=idle_mode_proc, args=(q,))
-        idle_mode.start()
-        idle_mode.join()
-        print "Idle Mode finished"
-        play_sound("idle_mode_finished")
+            print "Idle Mode"
+            idle_mode = Process(target=idle_mode_proc, args=(dp_queue,))
+            idle_mode.start()
+            idle_mode.join()
+            print "Idle Mode finished"
+            play_sound("idle_mode_finished")
 
-        print "Game Mode"
-        game_mode = Process(target=game_mode_proc, args=(q,))
-        game_mode.start()
-        game_mode.join()
-        print "Game Mode finished"
-##        play_sound("idle_mode_finished")
+            ## Register mode
+            play_sound("register_mode_finished")
+            
+            print "Game Mode"
+            game_mode = Process(target=game_mode_proc, args=(dp_queue, game_status_queue, ))
+            game_mode.start()
+            
+            game_mode.join()
+            print "Game Mode finished"
+            play_sound("game_mode_finished")
 
-        data_reader.join()
-        print "Finished"
+            data_reader.join()
+            print "Finished"
         
     except KeyboardInterrupt:
+        pass
+    except:
         pass
 
 if __name__ == "__main__":
