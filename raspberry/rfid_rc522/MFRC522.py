@@ -106,14 +106,17 @@ class MFRC522:
   Reserved34      = 0x3F
     
   serNum = []
-  
-  def __init__(self, dev='/dev/spidev0.0', spd=1000000):
+
+  def __init__(self, dev='/dev/spidev0.0', spd=1000000, rfid_pin=22):
+    self.init_rfid_board(dev, spd, rfid_pin)
+
+  def init_rfid_board(self, dev='/dev/spidev0.0', spd=1000000, rfid_pin=22):
     spi.openSPI(device=dev,speed=spd)
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(22, GPIO.OUT)
-    GPIO.output(self.NRSTPD, 1)
-    self.MFRC522_Init()
-  
+    GPIO.setup(rfid_pin, GPIO.OUT)
+    GPIO.output(rfid_pin, 1)
+    self.MFRC522_Init(rfid_pin)
+
   def MFRC522_Reset(self):
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
   
@@ -380,8 +383,8 @@ class MFRC522:
             print "Authentication error"
         i = i+1
 
-  def MFRC522_Init(self):
-    GPIO.output(self.NRSTPD, 1)
+  def MFRC522_Init(self, rfid_pin):
+    GPIO.output(rfid_pin, 1)
   
     self.MFRC522_Reset();
     
