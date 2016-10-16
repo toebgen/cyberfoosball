@@ -2,7 +2,7 @@
 import requests
 import json
 
-url = "http://localhost:5000"
+url = "http://localhost:5000/status_update"
 data = {
     'home_defense': 'hash1',
     'home_offense': 'hash2',
@@ -15,3 +15,4 @@ data = {
 r = requests.post(url, json=data)
 
 print('r=%s' % r)
+# read the return value somehow
