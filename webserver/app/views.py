@@ -3,7 +3,14 @@ from app import app
 from .models import User
 import json
 
-game_status = None
+game_status = {
+    "home_defense": "none",
+    "home_offense": "none",
+    "guest_defense": "none",
+    "guest_offense": "none",
+    "home_goals": 0,
+    "guest_goals": 0
+}
 
 
 @app.route('/', methods=['GET'])
@@ -39,3 +46,11 @@ def add_numbers():
     print('a:%i' % a)
     print('b:%i' % b)
     return jsonify(result=a + b)
+
+
+@app.route('/_periodic_update')
+def periodic_update():
+    i = request.args.get('i', 0, type=int)
+    print('received an i: %i' % i)
+    print(json.dumps(game_status))
+    return jsonify(game_status)

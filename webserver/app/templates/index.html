@@ -2,33 +2,63 @@
 <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
     console.log('$SCRIPT_ROOT: %s', $SCRIPT_ROOT);
-    var $test = "test";
-    console.log('$test: %s', $test);
 </script>
 <script type="text/javascript">
-    $(function() {
-        var submit_form = function(e) {
-            $.getJSON($SCRIPT_ROOT + '/_add_numbers', {
-                a: $('input[name="a"]').val(),
-                b: $('input[name="b"]').val()
-            }, function(data) {
-                $('#result').text(data.result);
-                $('input[name=a]').focus().select();
-            });
-            return false;
-        };
-        $('a#calculate').bind('click', submit_form);
-        $('input[type=text]').bind('keydown', function(e) {
-            if (e.keyCode == 13) {
-                submit_form(e);
-            }
-        });
-        $('input[name=a]').focus();
-    });
+    var i = 1
+    var timeout = 1000
+    var game_status;
+
+    function periodic_update() {
+      $.getJSON($SCRIPT_ROOT + '/_periodic_update', {i},
+      function(data){
+        console.log(data)
+        game_status = data
+        game_status_str = JSON.stringify(game_status, null, 4);
+        // displayPlainString(game_status_str)
+        update_table()
+      });
+      i++
+      timer = setTimeout(periodic_update, timeout)
+    }
+    var timer = setTimeout(periodic_update, timeout)
+
+    function displayPlainString(inp) {
+      document.body.appendChild(document.getElementById('game_status_full_json')).innerHTML = inp;
+    }
+
+    function update_table(){
+      document.getElementById('home_defense').innerHTML = game_status.home_defense;
+      document.getElementById('home_offense').innerHTML = game_status.home_offense;
+      document.getElementById('guest_defense').innerHTML = game_status.guest_defense;
+      document.getElementById('guest_offense').innerHTML = game_status.guest_offense;
+      document.getElementById('home_goals').innerHTML = game_status.home_goals;
+      document.getElementById('guest_goals').innerHTML = game_status.guest_goals;
+    }
 </script>
-<h1>jQuery Example</h1>
-<p>
-    <input type="text" size="5" name="a"> +
-    <input type="text" size="5" name="b"> =
-    <span id="result">?</span>
-    <p><a href=# id="calculate">calculate server side</a> {% endblock %}
+
+<div id="game_status_full_json"></div>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;border-color:#bbb;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#594F4F;background-color:#E0FFEB;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#bbb;color:#493F3F;background-color:#9DE0AD;}
+.tg .tg-ugh9{background-color:#C2FFD6}
+</style>
+<table class="tg">
+  <tr>
+    <th class="tg-031e" colspan="2">Home</th>
+    <th class="tg-031e" colspan="2">Guest</th>
+  </tr>
+  <tr>
+    <td class="tg-ugh9" id="home_defense"></td>
+    <td class="tg-ugh9" id="home_offense"></td>
+    <td class="tg-ugh9" id="guest_defense"></td>
+    <td class="tg-ugh9" id="guest_offense"></td>
+  </tr>
+  <tr>
+    <td class="tg-031e" id="home_goals" colspan="2"></td>
+    <td class="tg-031e" colspan="2" id="guest_goals"></td>
+  </tr>
+</table>
+
+{% endblock %}

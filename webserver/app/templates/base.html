@@ -2,17 +2,18 @@
 
     <head>
         {% if title %}
-        <title>{{ title }} - cyberfoosball</title>
+        <title>{{ title }} - Cyberfoosball</title>
         {% else %}
-        <title>Welcome to cyberfoosball</title>
+        <title>Welcome to Cyberfoosball</title>
         {% endif %}
         <!-- <script type=text/javascript src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script> -->
         <script type=text/javascript src="{{url_for('static', filename='jquery.js') }}"></script>
     </head>
 
     <body>
-        <div>cyberfoosball: <a href="/index">Home</a></div>
-        <hr> {% block content %}{% endblock %}
+        <div>Cyberfoosball: <a href="/index">Home</a></div>
+        <hr> <h1>Cyberfoosball</h1>
+        {% block content %}{% endblock %}
     </body>
 
 </html>
