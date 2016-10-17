@@ -8,7 +8,6 @@ import threading
 import signal
 from collections import namedtuple
 from multiprocessing import Process
-from rfid_rc522 import MFRC522
 
 GOAL_HOME_GPIO = 29
 GOAL_VISITORS_GPIO = 31
@@ -54,8 +53,6 @@ team_info = {"silver" : TeamData(),
 score_info = {"silver" : 0, 
              "black": 0}
 
-READ_RFID = True
-
 ## Accessfunctions
 def reset():
     global button_info, button_status, team_info, score_info, READ_RFID
@@ -70,16 +67,22 @@ def reset():
     READ_RFID = True
 
 def get_button_status():
-    return button_status
+    global button_status
+    button = button_status.copy()
+    button_status = {"silver" : "undefined", "black": "undefined"}
+    return button
+
 def get_score_info():
-    return score_info
+    global score_info
+    score = score_info.copy()
+    score_info = {"silver" : 0, "black": 0}
+    return score
 
 def start(q):
     global READ_RFID
 
     reset()
-##    pygame.mixer.init()
-        
+    
     try:
         print("__ read data from sensors __")
         #set up GPIO using BOARD numbering
@@ -88,9 +91,9 @@ def start(q):
 
         # Button Switch Pins
         GPIO.setup(BUTTON_HOME_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
-        GPIO.add_event_detect(BUTTON_HOME_GPIO, GPIO.BOTH, callback=button, bouncetime=10)
+        GPIO.add_event_detect(BUTTON_HOME_GPIO, GPIO.BOTH, callback=button, bouncetime=50)
         GPIO.setup(BUTTON_VISITORS_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN);
-        GPIO.add_event_detect(BUTTON_VISITORS_GPIO, GPIO.BOTH, callback=button, bouncetime=10)
+        GPIO.add_event_detect(BUTTON_VISITORS_GPIO, GPIO.BOTH, callback=button, bouncetime=50)
 
         # IR Sensor Switch Pins - Pull Up since switch goes to ground when triggered
         GPIO.setup(GOAL_HOME_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP);
@@ -101,7 +104,7 @@ def start(q):
 
         while True:
             try:
-                time.sleep(1)
+                time.sleep(.1)
                 # Write output
 ##                print("...")
                 q.put([get_button_status(), get_score_info()])
@@ -118,15 +121,12 @@ def start(q):
     finally:
         print("Cleanup")
         GPIO.cleanup()
-        READ_RFID = False
-##        rfid_reader.join()
 
 
 def goal(channel):
     global score_info
     side = "silver" if channel == GOAL_HOME_GPIO else "black"
-    score_info[side] += 1
-##    print score_info
+    score_info[side] = 1
               
 def button(channel):
     side = "silver" if channel == BUTTON_HOME_GPIO else "black"
@@ -160,7 +160,7 @@ def button_press(side):
         print(side + " unknown button state!")
 
 def button_release(side):
-    print side + ": button release"
+##    print side + ": button release"
     button_info[side].status = RELEASED
     if (not math.isnan(button_info[side].press_time)):
         # fire timer for single button press
@@ -169,7 +169,7 @@ def button_release(side):
 
 def penalty(side):
     button_info[side].press_time = NAN
-    button_status[side] = ": single_click"
+    button_status[side] = "single_click"
     print(side + " single click recognized!")
 
 ##def rfid_reader_proc():
