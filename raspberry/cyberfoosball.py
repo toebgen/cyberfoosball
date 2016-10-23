@@ -30,6 +30,8 @@ def play_sound(what_to_play):
         sound_box.music.load("./sounds/fanfare.wav")
     if what_to_play == "goal_silver":
         sound_box.music.load("./sounds/fanfare2.wav")
+    if what_to_play == "beep":
+        sound_box.music.load("./sounds/car_x.wav")
 
     try:
         sound_box.music.play()
@@ -38,7 +40,7 @@ def play_sound(what_to_play):
         sound_box.quit()
     except KeyboardInterrupt:
         sound_box.quit()
-        return
+        
 
 def idle_mode_proc(dp_queue):
     try:
@@ -126,18 +128,15 @@ def main():
     global score
   
     dp_queue = Queue()
-    
-    try:
 
-        print "Start data processing"
+    play_sound("beep")
+
+    try:
         data_reader = Process(target=data_processing.start, args=(dp_queue,))
+        print "Start data processing"
         data_reader.start()
         
         while True:
-            
-            # Re-Set game score
-            score = {"silver" : 0, "black": 0}
-                    
             print "Idle Mode"
             idle_mode = Process(target=idle_mode_proc, args=(dp_queue,))
             idle_mode.start()
@@ -152,6 +151,8 @@ def main():
             time.sleep(1)
             
             print "Game Mode"
+            # Re-Set game score
+            score = {"silver" : 0, "black": 0}
             play_sound("begin_game")
             game_mode = Process(target=game_mode_proc, args=(dp_queue, ))
             game_mode.start()
@@ -161,14 +162,9 @@ def main():
             print "Finished"
 
             play_sound("game_mode_finished")
-
-        
     except KeyboardInterrupt:
         return
 
-    finally:
-        print("Cleanup Main")
-        data_reader.join()
 
 if __name__ == "__main__":
     main()
